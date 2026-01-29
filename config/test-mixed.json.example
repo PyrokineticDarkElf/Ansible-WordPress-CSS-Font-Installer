@@ -1,0 +1,23 @@
+[
+    {
+        "color": {
+            "prefix": "test",
+            "name": "Hex Red",
+            "hex": "#FF0000"
+        }
+    },
+    {
+        "color": {
+            "prefix": "test",
+            "name": "RGB Green",
+            "rgb": "0, 255, 0"
+        }
+    },
+    {
+        "color": {
+            "prefix": "test",
+            "name": "HSL Blue",
+            "hsl": "240, 100%, 50%"
+        }
+    }
+]

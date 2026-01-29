@@ -1,0 +1,16 @@
+---
+- name: WordPress CSS Colour Theme Variable Generator
+  hosts: wordpress_servers
+  gather_facts: yes
+  vars_files:
+    - config/vars.yml
+
+  tasks:
+    - name: Run Preflight Checks
+      ansible.builtin.include_tasks: tasks/preflight.yml
+
+    - name: Run Theme Colour Variable Generator
+      ansible.builtin.include_tasks: tasks/generate_variables.yml
+
+    - name: Run Cleanup Tasks
+      ansible.builtin.include_tasks: tasks/cleanup.yml

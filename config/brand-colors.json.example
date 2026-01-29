@@ -1,0 +1,37 @@
+[
+    {
+        "color": {
+            "prefix": "pkde",
+            "name": "Black",
+            "hex": "#000000",
+        }
+    },
+    {
+        "color": {
+            "prefix": "pkde",
+            "name": "White",
+            "hex": "#FFFFFF"
+        }
+    },
+    {
+        "color": {
+            "prefix": "pkde",
+            "name": "Red",
+            "hex": "#FF0000"
+        }
+    },
+    {
+        "color": {
+            "prefix": "pkde",
+            "name": "Green",
+            "hex": "#00FF00"
+        }
+    },
+    {
+        "color": {
+            "prefix": "pkde",
+            "name": "Blue",
+            "hex": "#0000FF"
+        }
+    }
+]

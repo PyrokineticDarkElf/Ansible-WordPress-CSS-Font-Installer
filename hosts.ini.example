@@ -1,0 +1,2 @@
+[wordpress_servers]
+your_wordpress_server_name ansible_host=your_wordpress_server_ip ansible_user=your_wordpress_server_user

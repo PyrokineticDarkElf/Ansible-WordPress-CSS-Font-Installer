@@ -1,0 +1,15 @@
+---
+# WordPress Paths
+wp_path: "public_html" # This is the relative path to the root of your WordPress installation from your ssh home directory
+theme_name: "custom-theme" # Example: "my-divi-child-theme" or "my-elementor-child-theme"
+theme_path: "{{ wp_path }}/wp-content/themes/{{ theme_name }}"
+
+# CSS Generation
+css_variable_formats: "hex,rgb,h,s,l" # Comma-separated list of formats (e.g., hex,rgb,hsl,h,s,l)
+css_default_target: "hex" # Variable to use as the base alias (e.g. 'hex'). Leave blank to disable base alias.
+css_exclude_target_format: false # If true, the format used as the default target won't be generated as a separate variable (e.g. no --prefix-name-hex)
+
+# Paths
+remote_css_dir: "{{ theme_path }}/css" # This is where you'd like the generated CSS file to be uploaded to
+local_json_dir: "{{ playbook_dir }}/config" # This is where your JSON file containing colour definitions is stored
+python_script_path: "{{ playbook_dir }}/scripts/colour-theme.py"

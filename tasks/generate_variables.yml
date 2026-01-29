@@ -1,0 +1,35 @@
+---
+- name: Find local JSON files
+  ansible.builtin.find:
+    paths: "{{ local_json_dir }}"
+    patterns: "*.json"
+  register: json_files
+  delegate_to: localhost
+
+- name: Create remote CSS directory
+  ansible.builtin.file:
+    path: "{{ remote_css_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate and upload CSS variables
+  block:
+    - name: Generate CSS locally from JSON
+      ansible.builtin.command:
+        cmd: >
+          python3 {{ python_script_path }}
+          --input {{ item.path }}
+          --formats "{{ css_variable_formats }}"
+          {% if css_default_target %}--default-format "{{ css_default_target }}"{% endif %}
+          {% if css_exclude_target_format | bool %}--exclude-default{% endif %}
+      loop: "{{ json_files.files }}"
+      delegate_to: localhost
+      register: css_generation
+      changed_when: false
+
+    - name: Upload CSS to remote host
+      ansible.builtin.copy:
+        content: "{{ item.stdout }}"
+        dest: "{{ remote_css_dir }}/{{ item.item.path | basename | regex_replace('\\.json$', '.css') }}"
+        mode: '0644'
+      loop: "{{ css_generation.results }}"

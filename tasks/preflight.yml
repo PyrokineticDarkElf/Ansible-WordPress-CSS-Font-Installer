@@ -1,0 +1,34 @@
+---
+# Remote WordPress Directory Check
+- name: Verify remote WordPress directory
+  block:
+    - name: Check WordPress path
+      ansible.builtin.stat:
+        path: "{{ wp_path }}"
+      register: wp_dir_stat
+
+    - name: Assert WordPress directory exists
+      ansible.builtin.assert:
+        that:
+          - wp_dir_stat.stat.exists
+          - wp_dir_stat.stat.isdir
+        fail_msg: "❌ WordPress directory '{{ wp_path }}' was not found or is not a directory on {{ inventory_hostname }}."
+        success_msg: "✅ WordPress directory '{{ wp_path }}' exists on {{ inventory_hostname }}."
+
+# WP-CLI Check
+- name: Verify WP-CLI availability
+  block:
+    - name: Run wp --version
+      ansible.builtin.command: "wp --version"
+      args:
+        chdir: "{{ wp_path }}"
+      register: wp_cli_version
+      changed_when: false
+      failed_when: false
+
+    - name: Assert WP-CLI is installed
+      ansible.builtin.assert:
+        that:
+          - wp_cli_version.rc == 0
+        success_msg: "✅ WP-CLI is installed: {{ wp_cli_version.stdout }}"
+        fail_msg: "❌ WP-CLI is not installed or not available in PATH on {{ inventory_hostname }}."
