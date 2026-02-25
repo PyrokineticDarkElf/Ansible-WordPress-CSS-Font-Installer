@@ -15,5 +15,6 @@ Thumbs.db
 .venv/
 hosts.ini
 config/vars.yml
-fonts/
+fonts/*
 !fonts/Montserrat/
+!fonts/Montserrat/**
