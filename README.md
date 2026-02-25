@@ -1,119 +1,84 @@
-# WordPress CSS Colour Theme Variable Generator
+# 🖋️ WordPress CSS Font Installer (Ansible)
 
-A robust Ansible-driven workflow to generate and deploy CSS custom properties (variables) to WordPress themes from structured color data.
+A powerful Ansible playbook designed to automate the entire workflow of preparing, converting, and installing custom fonts into a WordPress theme. It handles font normalization, conversion to modern web formats (`.woff2`), CSS `@font-face` generation, and remote deployment.
 
-## Features
+## 🚀 Key Features
 
-- 🚀 **JSON-First Workflow**: Define brand colors in structured JSON files.
-- 🎨 **Multi-Format Support**: Define colors in **HEX**, **RGB**, or **HSL**. The generator automatically derives all other formats.
-- 🛠️ **Professional Python Generator**: A modular, typed Python script handles color mathematics and CSS formatting.
-- 📦 **Automated Deployment**: Ansible captures generated CSS and uploads it directly to your remote WordPress servers—no local temporary files needed.
-- ⚖️ **Flexible Aliasing**: Create base variables (e.g., `--prefix-color: #hex`) referencing any format, with optional redundancy removal.
-
----
-
-## Prerequisites
-
-- **Local**: Python 3.x and Ansible installed.
-- **Remote**: SSH access to your WordPress server(s).
+-   **Font Normalization**: Automatically cleans up font filenames and folder structures (removing spaces, lowercase naming).
+-   **Automated Conversion**: Uses CloudConvert to convert your raw font files into optimized `.woff2` files for better web performance.
+-   **CSS Generation**: Dynamically creates a `brand-fonts.css` (or custom-named) file with all necessary `@font-face` declarations.
+-   **Remote Deployment**: Securely uploads converted fonts and the generated CSS file to your WordPress theme via SSH.
+-   **Preflight Checks**: Verifies your WordPress installation, remote paths, and WP-CLI availability before starting.
 
 ---
 
-## Setup & Configuration
+## 🛠️ Prerequisites
 
-### 1. Project Setup
-Rename the example configuration files and add your specific server details:
+Before you begin, ensure you have the following installed on your local machine:
 
+1.  **Ansible**: `brew install ansible` (macOS) or equivalent.
+2.  **Python 3**: For running the font processing scripts.
+3.  **SSH Access**: SSH access to your WordPress server with an authorized key.
+4.  **CloudConvert API Key**: Sign up at [cloudconvert.com](https://cloudconvert.com/) to get your API key for font conversions.
+
+---
+
+## 📂 Project Structure
+
+```text
+.
+├── config/
+│   └── vars.yml          # Core configuration and API keys
+├── fonts/               # 📥 Place your raw font files here
+├── scripts/             # Python helper scripts for font processing
+├── tasks/               # Modular Ansible task definitions
+├── hosts.ini            # Server inventory
+└── playbook.yml         # Main entry point
+```
+
+---
+
+## ⚙️ Configuration
+
+### 1. Setup Inventory
+Copy the example host file and update it with your server details:
 ```bash
-cp config/vars.yml.example config/vars.yml
 cp hosts.ini.example hosts.ini
 ```
-
-### 2. Configure project variables
-Edit `config/vars.yml` to define your theme paths and generation preferences:
-
-```yaml
-# WordPress Paths
-wp_path: "public_html"      # Relative path to WP root from SSH home
-theme_name: "my-theme"      # Your child theme directory name
-theme_path: "{{ wp_path }}/wp-content/themes/{{ theme_name }}"
-
-# CSS Generation Logic
-css_variable_formats: "hex,rgb,h,s,l" # Which formats to generate per color
-css_default_target: "hex"             # Format used for the base alias (--prefix-name)
-css_exclude_target_format: true       # Hide redundant variables (e.g. no --prefix-name-hex)
-
-# Internal Paths
-remote_css_dir: "{{ theme_path }}/css"
-local_json_dir: "{{ playbook_dir }}/config"
-python_script_path: "{{ playbook_dir }}/scripts/colour-theme.py"
+Edit `hosts.ini`:
+```ini
+[wordpress_servers]
+your_server ansible_host=123.456.78.90 ansible_user=username
 ```
+
+### 2. Configure Variables
+Copy the example variables file and fill in your specific paths and API keys:
+```bash
+cp config/vars.yml.example config/vars.yml
+```
+
+**Key variables to update in `config/vars.yml`:**
+- `cloudconvert_api_key`: Your API key from CloudConvert.
+- `wp_path`: Relative path to your WordPress root (e.g., `public_html`).
+- `theme_name`: The directory name of your active child theme.
+- `css_filename`: Desired name for the generated CSS file (default: `brand-fonts.css`).
+
+### 3. Add Your Fonts
+Place all your font files (OTF, TTF, etc.) inside the `fonts/` directory. You can organize them into subfolders (e.g., `fonts/Inter/`, `fonts/Montserrat/`).
 
 ---
 
-## Defining Color Data
+## 🏃 Usage
 
-Create `.json` files in your `config/` directory. You can provide colors in whichever format you have available:
-
-```json
-[
-    {
-        "color": {
-            "prefix": "brand",
-            "name": "Primary Red",
-            "hex": "#FF0000"
-        }
-    },
-    {
-        "color": {
-            "prefix": "brand",
-            "name": "Action Green",
-            "rgb": "0, 255, 0"
-        }
-    },
-    {
-        "color": {
-            "prefix": "brand",
-            "name": "Sky Blue",
-            "hsl": "210, 100%, 50%"
-        }
-    }
-]
-```
-
-*The generator will automatically output HEX, RGB, and HSL variables for **all** entries, regardless of how they were defined in the JSON.*
-
----
-
-## Usage
-
-Run the Ansible playbook to process all JSON files and upload the results:
+Once configured, run the playbook using the following command:
 
 ```bash
 ansible-playbook -i hosts.ini playbook.yml
 ```
 
-### How it works
-1. **Find**: Ansible identifies all `.json` files in your `config/` directory.
-2. **Generate**: The Python script is called locally. It prints the generated CSS to `stdout`.
-3. **Capture**: Ansible captures this output directly into a variable.
-4. **Deploy**: The content is sent to the remote server and saved as a `.css` file in your theme's CSS directory.
-
----
-
-## Maintenance
-
-### Adding New Formats
-Supported format tokens for `css_variable_formats`:
-- `hex`: Standard hex code (`#FFFFFF`)
-- `hex-r`, `hex-g`, `hex-b`: Individual hex components.
-- `rgb`: Comma-separated RGB (`255, 255, 255`)
-- `r`, `g`, `b`: Individual RGB components.
-- `hsl`: CSS HSL syntax (`0 0% 100%`)
-- `h`, `s`, `l`: Individual HSL components.
-
-### Python script CLI
-You can also run the generator manually for local testing:
-```bash
-python3 scripts/colour-theme.py --input config/brand-colors.json --formats hex,rgb
-```
+### What happens next?
+1.  **Preflight**: Checks local dependencies and remote WordPress directory.
+2.  **Conversion**: Raw fonts are converted to `.woff2` and stored locally in `temp/`.
+3.  **Normalization**: Filenames are cleaned (e.g., `My Font Bold.ttf` ➔ `my-font-bold.woff2`).
+4.  **CSS Generation**: A CSS template is created mapping all normalized fonts.
+5.  **Deployment**: Converted fonts are uploaded to `wp-content/themes/your-theme/fonts/` and the CSS is uploaded to `wp-content/themes/your-theme/css/`.

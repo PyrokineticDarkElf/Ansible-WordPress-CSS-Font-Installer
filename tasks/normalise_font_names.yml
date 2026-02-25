@@ -1,0 +1,11 @@
+- name: Normalise font folder and file names
+  ansible.builtin.command:
+    cmd: >
+      {{ venv_path }}/bin/python {{ playbook_dir }}/scripts/normalise-fonts.py
+      --dir {{ local_temp_dir }}/fonts
+  delegate_to: localhost
+  register: normalise_fonts_result
+
+- name: Display normalisation output
+  ansible.builtin.debug:
+    var: normalise_fonts_result.stdout_lines

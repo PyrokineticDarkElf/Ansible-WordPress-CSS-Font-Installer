@@ -1,0 +1,21 @@
+---
+- name: Create remote directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ remote_fonts_dir }}"
+    - "{{ remote_css_dir }}"
+
+- name: Copy fonts to remote
+  ansible.builtin.copy:
+    src: "{{ local_temp_dir }}/fonts/"
+    dest: "{{ remote_fonts_dir }}/"
+    mode: '0644'
+
+- name: Copy CSS template to remote
+  ansible.builtin.copy:
+    src: "{{ local_temp_dir }}/css/{{ css_filename }}"
+    dest: "{{ remote_css_dir }}/{{ css_filename }}"
+    mode: '0644'

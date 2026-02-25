@@ -1,4 +1,12 @@
 ---
+- name: Ensure Python dependencies are installed in local virtualenv
+  ansible.builtin.pip:
+    name: cloudconvert
+    state: present
+    virtualenv: "{{ venv_path }}"
+    virtualenv_command: python3 -m venv
+  delegate_to: localhost
+
 # Remote WordPress Directory Check
 - name: Verify remote WordPress directory
   block:

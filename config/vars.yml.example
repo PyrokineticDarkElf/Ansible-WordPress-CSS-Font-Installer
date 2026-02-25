@@ -1,15 +1,18 @@
 ---
+# CloudConvert API
+cloudconvert_api_key: "YOUR_CLOUDCONVERT_API_KEY" # The API key for CloudConvert
+
+# Local font files dir
+font_dir: "{{ playbook_dir }}/fonts" # The path to the directory containing the font files
+
 # WordPress Paths
-wp_path: "public_html" # This is the relative path to the root of your WordPress installation from your ssh home directory
-theme_name: "custom-theme" # Example: "my-divi-child-theme" or "my-elementor-child-theme"
-theme_path: "{{ wp_path }}/wp-content/themes/{{ theme_name }}"
-
-# CSS Generation
-css_variable_formats: "hex,rgb,h,s,l" # Comma-separated list of formats (e.g., hex,rgb,hsl,h,s,l)
-css_default_target: "hex" # Variable to use as the base alias (e.g. 'hex'). Leave blank to disable base alias.
-css_exclude_target_format: false # If true, the format used as the default target won't be generated as a separate variable (e.g. no --prefix-name-hex)
-
-# Paths
+wp_path: "YOUR_WP_PATH" # This is the relative path to the root of your WordPress installation from your ssh home directory (e.g. public_html)
+theme_name: "YOUR_THEME_NAME" # Example: "my-divi-child-theme" or "my-elementor-child-theme"
+theme_path: "{{ wp_path }}/wp-content/themes/{{ theme_name }}" # The path to the theme directory on the remote host
+remote_fonts_dir: "{{ theme_path }}/fonts" # This is where the font files will be stored on the remote host
 remote_css_dir: "{{ theme_path }}/css" # This is where you'd like the generated CSS file to be uploaded to
-local_json_dir: "{{ playbook_dir }}/config" # This is where your JSON file containing colour definitions is stored
-python_script_path: "{{ playbook_dir }}/scripts/colour-theme.py"
+css_filename: "brand-fonts.css" # The name of the CSS file to be generated
+
+# Local Paths
+venv_path: "{{ playbook_dir }}/.venv" # The path to the virtual environment
+local_temp_dir: "{{ playbook_dir }}/temp" # The path to the temporary directory

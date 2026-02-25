@@ -12,6 +12,8 @@ Thumbs.db
 *.log
 
 # Project specific
+.venv/
 hosts.ini
-config/brand-colors.json
 config/vars.yml
+fonts/
+!fonts/Montserrat/

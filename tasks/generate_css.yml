@@ -1,0 +1,18 @@
+---
+# Generate CSS font template
+- name: Ensure local temporary directory exists
+  ansible.builtin.file:
+    path: "{{ local_temp_dir }}/css"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Generate CSS font template locally
+  ansible.builtin.command:
+    cmd: >
+      {{ venv_path }}/bin/python {{ playbook_dir }}/scripts/css-font-template-generator.py
+      --input {{ local_temp_dir }}/fonts
+      --output {{ local_temp_dir }}/css
+      --filename {{ css_filename }}
+  delegate_to: localhost
+  register: css_font_template_result

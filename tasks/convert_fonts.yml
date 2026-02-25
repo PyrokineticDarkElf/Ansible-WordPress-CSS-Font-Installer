@@ -1,0 +1,26 @@
+---
+- name: Ensure local directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  loop:
+    - "{{ font_dir }}"
+    - "{{ local_temp_dir }}/fonts"
+
+- name: Run Font File Converter script
+  # Outputting to the same directory as input to supplament existing files
+  ansible.builtin.command:
+    cmd: >
+      {{ venv_path }}/bin/python {{ playbook_dir }}/scripts/font-file-converter.py
+      --input {{ font_dir }}
+      --output {{ local_temp_dir }}/fonts
+      --api-key {{ cloudconvert_api_key }}
+  delegate_to: localhost
+  register: font_conversion_result
+
+- name: Display font conversion output
+  ansible.builtin.debug:
+    var: font_conversion_result.stdout_lines
+  when: font_conversion_result.stdout is defined
