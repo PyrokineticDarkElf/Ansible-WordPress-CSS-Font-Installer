@@ -1,4 +1,10 @@
 ---
+- name: Delete local temp directory if it exists
+  ansible.builtin.file:
+    path: "{{ local_temp_dir }}"
+    state: absent
+  delegate_to: localhost
+
 - name: Ensure local directories exist
   ansible.builtin.file:
     path: "{{ item }}"
