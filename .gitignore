@@ -18,3 +18,5 @@ config/vars.yml
 fonts/*
 !fonts/Montserrat/
 !fonts/Montserrat/**
+# Build output
+temp/

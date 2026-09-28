@@ -1,52 +1,74 @@
 import os
 import re
-import shutil
 import argparse
 from urllib.parse import quote
 from pathlib import Path
 
-# Variant patterns to match styles
-VARIANT_MAP = {
-    'BlackItalic': ('900', 'italic'),
-    'Black': ('900', 'normal'),
-    'SuperItalic': ('900', 'italic'),
-    'Super': ('900', 'normal'),
-    'BoldItalic': ('700', 'italic'),
-    'Bold': ('700', 'normal'),
-    'Italic': ('400', 'italic'),
-    'Regular': ('400', 'normal'),
-    'LightItalic': ('300', 'italic'),
-    'Light': ('300', 'normal'),
-    'MediumItalic': ('500', 'italic'),
-    'Medium': ('500', 'normal'),
-    'SemiBoldItalic': ('600', 'italic'),
-    'SemiBold': ('600', 'normal'),
-    'ExtraBoldItalic': ('800', 'italic'),
-    'ExtraBold': ('800', 'normal'),
-    'ExtraLightItalic': ('200', 'italic'),
-    'ExtraLight': ('200', 'normal'),
-    'UltraLightItalic': ('200', 'italic'),
-    'UltraLight': ('200', 'normal'),
-    'ThinItalic': ('100', 'italic'),
-    'Thin': ('100', 'normal'),
-    'HairlineItalic': ('100', 'italic'),
-    'Hairline': ('100', 'normal'),
-}
+# Canonical variant mapping
+VARIANT_PATTERNS = [
+    (r'(extra|ultra)light(italic)?$', '200'),
+    (r'extrabold(italic)?$', '800'),
+    (r'(hairline|thin)(italic)?$', '100'),
+    (r'light(italic)?$', '300'),
+    (r'medium(italic)?$', '500'),
+    (r'(semi|demi)bold(italic)?$', '600'),
+    (r'(?<!extra)(?<!semi)(?<!demi)bold(italic)?$', '700'),
+    (r'(extra|ultra)?(black|heavy|super)(italic)?$', '900'),
+    (r'italic$', '400'),
+    (r'(book|regular|roman)$', '400'),
+]
 
 EXT_PRIORITY = ['woff2', 'woff', 'otf', 'ttf']
 
+FORMAT_TYPES = {
+    'woff2': 'woff2',
+    'woff': 'woff',
+    'otf': 'opentype',
+    'ttf': 'truetype'
+}
+
+WIDTH_MAPPING = {
+    'ultracondensed': '50%',
+    'extracondensed': '62.5%',
+    'compressed': '75%',
+    'condensed': '75%',
+    'narrow': '85%',
+    'extraexpanded': '150%',
+    'ultraexpanded': '200%',
+    'extended': '125%',
+    'expanded': '125%',
+}
 
 def get_variant(file_name):
-    name_stem = Path(file_name).stem.lower()
-    
-    # Remove separators for consistent matching
-    name_stem = re.sub(r'[-_ ]', '', name_stem)
+    # Initial normalization
+    normalized = re.sub(
+        r'[-_\s]',
+        '',
+        Path(file_name).stem.lower()
+    )
 
-    for key in sorted(VARIANT_MAP.keys(), key=len, reverse=True):
-        if name_stem.endswith(key.lower()):
-            return key
+    # Default values
+    weight, style = ('400', 'normal')
+    stretch = 'normal'
 
-    return 'Regular'
+    # 1. Identify Stretch (Width) - Check longest patterns first to avoid partial matches
+    # (e.g., 'extracondensed' should match 'extracondensed' before 'condensed')
+    for key in sorted(WIDTH_MAPPING.keys(), key=len, reverse=True):
+        if key in normalized:
+            stretch = WIDTH_MAPPING[key]
+            # Remove it so it doesn't interfere with weight detection
+            normalized = normalized.replace(key, '')
+            break
+
+    # 2. Identify Weight/Style
+    for pattern, weight in VARIANT_PATTERNS:
+        match = re.search(pattern, normalized, re.IGNORECASE)
+        if match:
+            # Dynamically determine style based on whether 'italic' was part of the match
+            style = 'italic' if 'italic' in match.group(0).lower() else 'normal'
+            return (weight, style, stretch)
+
+    return (weight, style, stretch)
 
 
 def scan_fonts(input_dir):
@@ -84,20 +106,18 @@ def scan_fonts(input_dir):
 
                 # Use relative path for portability. Files and folders are already normalized.
                 file_url_path = f"../fonts/{font_family_dir}/{fmt}/{quote(file)}"
-                font_variants[variant_key][fmt] = file_url_path
+                
+                # Prevent duplicate overwrites if multiple files match the same weight/style
+                if fmt not in font_variants[variant_key]:
+                    font_variants[variant_key][fmt] = file_url_path
 
         for variant, sources in font_variants.items():
-            font_weight, font_style = VARIANT_MAP.get(variant, ('normal', 'normal'))
+            font_weight, font_style, font_stretch = variant
 
             src_lines = []
             for fmt in EXT_PRIORITY:
                 if fmt in sources:
-                    fmt_type = {
-                        'woff2': 'woff2',
-                        'woff': 'woff',
-                        'otf': 'opentype',
-                        'ttf': 'truetype'
-                    }.get(fmt, 'unknown')
+                    fmt_type = FORMAT_TYPES.get(fmt, 'unknown')
                     src_lines.append(f"url('{sources[fmt]}') format('{fmt_type}')")
 
             if not src_lines:
@@ -105,17 +125,14 @@ def scan_fonts(input_dir):
 
             joined_src_lines = ',\n       '.join(src_lines)
 
-            # We use the variant name as the font-family label in CSS for better precision,
-            # but the user might want the family name. Let's use the folder name for family.
-            # Convert hyphenated name back to Title Case for font-family if desired, 
-            # but usually the folder name reflects the family.
-            display_family = font_family_name.replace('-', ' ').title()
+            display_family = font_family_name.replace('-', ' ')
 
             block = f"""@font-face {{
   font-family: '{display_family}';
   src: {joined_src_lines};
   font-weight: {font_weight};
   font-style: {font_style};
+  font-stretch: {font_stretch};
   font-display: swap;
 }}"""
             css_blocks.append(block)
